@@ -16,6 +16,25 @@ This repo is a complete re-write of [`wifite`](https://github.com/derv82/wifite)
 
 Wifite runs existing wireless-auditing tools for you. Stop memorizing command arguments & switches!
 
+Snake Framework
+---------------
+
+This checkout also includes Snake, a localhost-first web control panel and CLI
+for authorized wireless-security lab workflows. It adds readiness diagnostics,
+guided scanning, tracked jobs, optional MITM, Evil Twin, RF tooling, an
+opt-in Air-to-LAN pivot into Strike, and HTML reports around wifite2.
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-snake.txt
+python snake.py doctor
+sudo .venv/bin/python snake.py server
+```
+
+See the [Snake Framework Guide](SNAKE_FRAMEWORK_GUIDE.md) for setup, safe
+operation, configuration, data paths, and troubleshooting.
+
 Wifite is designed to use all known methods for retrieving the password of a wireless access point (router).  These methods include:
 1. WPS: The [Offline Pixie-Dust attack](https://en.wikipedia.org/wiki/Wi-Fi_Protected_Setup#Offline_brute-force_attack)
 1. WPS: The [Online Brute-Force PIN attack](https://en.wikipedia.org/wiki/Wi-Fi_Protected_Setup#Online_brute-force_attack)

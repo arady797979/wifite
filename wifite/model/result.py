@@ -49,8 +49,19 @@ class CrackResult(object):
             except Exception as e:
                 Color.pl('{!} error while loading %s: %s' % (name, str(e)))
 
-        # Check for duplicates
         this_dict = self.to_dict()
+        secret = (
+            this_dict.get('key')
+            or this_dict.get('psk')
+            or this_dict.get('ascii_key')
+            or this_dict.get('pin')
+            or this_dict.get('hex_key')
+        )
+        if not str(secret or '').strip():
+            Color.pl('{!} {O}Not saving crack result: empty key/password{W}')
+            return
+
+        # Check for duplicates
         this_dict.pop('date')
         for entry in saved_results:
             this_dict['date'] = entry.get('date')

@@ -317,6 +317,11 @@ class Arguments(object):
             help=Color.s('File containing passwords for cracking (default: {G}%s{W})')
                 % self.config.wordlist)
 
+        wpa.add_argument('--no-crack',
+            action='store_true',
+            dest='no_crack',
+            help=Color.s('Capture handshake/PMKID but {O}do not crack{W}'))
+
         wpa.add_argument('--wpadt',
             action='store',
             dest='wpa_deauth_timeout',

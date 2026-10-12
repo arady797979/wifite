@@ -50,6 +50,11 @@ class AttackWPA(Attack):
         Color.pl('\n{+} analysis of captured handshake file:')
         handshake.analyze()
 
+        if getattr(Configuration, 'no_crack', False):
+            Color.pl('{+} {O}Skipping crack ({C}--no-crack{O}); handshake saved')
+            self.success = True
+            return True
+
         # Check wordlist
         if Configuration.wordlist is None:
             Color.pl('{!} {O}Not cracking handshake because' +

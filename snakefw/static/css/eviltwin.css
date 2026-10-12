@@ -1,0 +1,108 @@
+/**
+ * Snake Evil Twin — layout for the Twin tab
+ */
+
+.twin-stats-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.twin-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 16px;
+}
+
+.twin-steps {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.twin-step {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.twin-step.active {
+  border-color: var(--border-bright);
+  color: var(--accent-green);
+}
+
+.twin-step.done {
+  color: var(--accent-cyan);
+}
+
+.twin-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.twin-chip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 4px 8px;
+}
+
+.twin-chip.ok {
+  border-color: rgba(0, 255, 65, 0.35);
+  color: var(--accent-green);
+}
+
+.twin-chip.warn {
+  border-color: rgba(255, 214, 10, 0.4);
+  color: var(--accent-yellow);
+}
+
+.twin-chip.miss {
+  border-color: rgba(255, 45, 85, 0.35);
+  color: var(--accent-red);
+}
+
+.twin-warning {
+  color: var(--accent-yellow);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.rf-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.twin-client,
+.twin-cred {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.twin-cred .secret-value {
+  margin-right: 8px;
+}
+
+@media (max-width: 980px) {
+  .twin-grid,
+  .twin-stats-row,
+  .rf-panel-grid {
+    grid-template-columns: 1fr;
+  }
+}

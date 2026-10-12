@@ -87,6 +87,8 @@ class Configuration(object):
         cls.cracked_file = 'cracked.txt'
         cls.wordlist = None
         wordlists = [
+            './snakefw/wordlists/snake-smart.txt',
+            './snakefw/wordlists/snake-fast.txt',
             './wordlist-top4800-probable.txt',  # Local file (ran from cloned repo)
             '/usr/share/dict/wordlist-top4800-probable.txt',  # setup.py with prefix=/usr
             '/usr/local/share/dict/wordlist-top4800-probable.txt',  # setup.py with prefix=/usr/local
@@ -116,6 +118,7 @@ class Configuration(object):
         cls.show_cracked = False
         cls.check_handshake = None
         cls.crack_handshake = False
+        cls.no_crack = False
 
         # Overwrite config values with arguments (if defined)
         cls.load_from_arguments()
@@ -284,6 +287,10 @@ class Configuration(object):
         '''Parses WPA-specific arguments'''
         if args.wpa_filter:
             cls.wpa_filter = args.wpa_filter
+
+        if getattr(args, 'no_crack', False):
+            cls.no_crack = True
+            Color.pl('{+} {C}option:{W} will {O}capture only{W} and skip cracking ({C}--no-crack{O})')
 
         if args.wordlist:
             if not os.path.exists(args.wordlist):

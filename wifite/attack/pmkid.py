@@ -90,6 +90,11 @@ class AttackPMKID(Attack):
         if pmkid_file is None:
             return False  # No hash found.
 
+        if getattr(Configuration, 'no_crack', False):
+            Color.pl('{+} {O}Skipping PMKID crack ({C}--no-crack{O}); hash saved')
+            self.success = True
+            return True
+
         # Crack it.
         try:
             self.success = self.crack_pmkid_file(pmkid_file)

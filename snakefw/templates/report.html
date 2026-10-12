@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Snake Engagement Report</title>
+  <style>
+    :root {
+      --ink: #122017;
+      --muted: #5b6f64;
+      --line: #d7e3db;
+      --ok: #1b7f3a;
+      --warn: #b45309;
+      --bad: #b42318;
+      --paper: #f7faf7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 15px/1.5 "Iowan Old Style", Georgia, serif;
+    }
+    main { max-width: 920px; margin: 0 auto; padding: 36px 28px 64px; }
+    header { border-bottom: 2px solid var(--ink); padding-bottom: 16px; margin-bottom: 28px; }
+    h1 { margin: 0 0 6px; font-size: 1.8rem; letter-spacing: 0.02em; }
+    h2 { margin: 32px 0 10px; font-size: 1.15rem; }
+    .meta { color: var(--muted); font-size: 0.92rem; }
+    .toolbar { margin: 12px 0 0; display: flex; gap: 8px; flex-wrap: wrap; }
+    button, .ghost {
+      border: 1px solid var(--ink);
+      background: #fff;
+      padding: 6px 12px;
+      font: 13px/1.2 system-ui, sans-serif;
+      cursor: pointer;
+    }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+    .kpi { border: 1px solid var(--line); padding: 12px 14px; background: #fff; }
+    .kpi b { display: block; font-size: 1.6rem; }
+    .kpi span { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .bar { height: 10px; background: #e4ece6; margin-top: 8px; }
+    .bar > i { display: block; height: 100%; background: var(--ok); }
+    .bar.warn > i { background: var(--warn); }
+    .bar.bad > i { background: var(--bad); }
+    table { width: 100%; border-collapse: collapse; font-family: system-ui, sans-serif; font-size: 0.86rem; }
+    th, td { border-bottom: 1px solid var(--line); text-align: left; padding: 8px 6px; vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .card { border: 1px solid var(--line); padding: 12px 14px; background: #fff; margin: 8px 0; }
+    ul.guide { padding-left: 18px; }
+    footer { margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+    @media print {
+      .toolbar { display: none; }
+      body { background: #fff; }
+      main { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Snake engagement report</h1>
+    <div class="meta">
+      Session {{ report.engagement_id }} ·
+      generated {{ report.generated_at_label }}
+      {% if not report.include_secrets %} · secrets redacted{% endif %}
+    </div>
+    <div class="toolbar">
+      <button type="button" onclick="window.print()">Print / Save PDF</button>
+      <a class="ghost" href="/api/report">JSON</a>
+    </div>
+  </header>
+
+  {% set s = report.summary %}
+  {% set risk = s.risk_score or 0 %}
+  {% set tone = 'bad' if risk >= 75 else 'warn' if risk >= 45 else '' %}
+  <section>
+    <h2>Executive summary</h2>
+    <div class="kpis">
+      <div class="kpi">
+        <span>Risk</span>
+        <b>{{ risk }}/100</b>
+        <div class="bar {{ tone }}"><i style="width:{{ risk }}%"></i></div>
+      </div>
+      <div class="kpi"><span>Cracked</span><b>{{ s.cracked }}</b></div>
+      <div class="kpi"><span>LAN hosts</span><b>{{ s.hosts }}</b></div>
+      <div class="kpi"><span>Findings</span><b>{{ s.findings }}</b></div>
+      <div class="kpi"><span>Jobs</span><b>{{ s.jobs }}</b></div>
+    </div>
+    <p>
+      Authorized lab assessment.
+      {% if s.cracked %}A wireless key was recovered.{% else %}No wireless key is stored yet.{% endif %}
+      {% if s.hosts %}Strike mapped {{ s.hosts }} live host{{ 's' if s.hosts != 1 else '' }}.{% endif %}
+    </p>
+  </section>
+
+  <section>
+    <h2>Remediation</h2>
+    <ul class="guide">
+      {% for item in report.guidance %}
+      <li><strong>{{ item.title }}</strong> — {{ item.detail }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section>
+    <h2>Wireless results</h2>
+    {% if report.cracked %}
+    <table>
+      <thead><tr><th>ESSID</th><th>BSSID</th><th>Type</th><th>Secret</th></tr></thead>
+      <tbody>
+        {% for row in report.cracked %}
+        <tr>
+          <td>{{ row.essid or '—' }}</td>
+          <td class="mono">{{ row.bssid or '—' }}</td>
+          <td>{{ row.attack or row.type or 'WPA' }}</td>
+          <td class="mono">{{ row.key or row.password or '••••••••' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="meta">No cracked entries.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Attack timeline</h2>
+    {% if report.timeline %}
+    <table>
+      <thead><tr><th>When</th><th>Action</th><th>State</th></tr></thead>
+      <tbody>
+        {% for ev in report.timeline %}
+        <tr>
+          <td class="mono">{{ ev.ts | int }}</td>
+          <td>{{ ev.title }}</td>
+          <td>{{ ev.state }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="meta">No finished jobs yet.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>LAN hosts</h2>
+    {% if report.hosts %}
+    <table>
+      <thead><tr><th>IP</th><th>Role</th><th>OS / vendor</th><th>Risk</th></tr></thead>
+      <tbody>
+        {% for host in report.hosts %}
+        <tr>
+          <td class="mono">{{ host.ip }}</td>
+          <td>{{ host.role or '—' }}</td>
+          <td>{{ host.os_guess or host.vendor or '—' }}</td>
+          <td>{{ host.risk_score or 0 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="meta">Run Strike after joining the lab LAN to populate this table.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Key findings</h2>
+    {% if report.findings %}
+      {% for f in report.findings %}
+      <div class="card">
+        <strong>{{ f.title or 'Finding' }}</strong>
+        <div class="meta">{{ f.ip or '' }} · {{ f.source or '' }}</div>
+        <div>{{ f.detail or '' }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <p class="meta">No Strike findings stored.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Radio plan</h2>
+    <p class="meta">
+      {{ report.radios.radio_count }} radio(s) ·
+      scan {{ report.radios.scan_iface or '—' }} ·
+      attack {{ report.radios.attack_iface or '—' }} ·
+      client {{ report.radios.client_iface or '—' }}
+    </p>
+    {% for note in report.radios.notes %}
+    <div class="meta">{{ note }}</div>
+    {% endfor %}
+  </section>
+
+  <footer>
+    Snake Framework — authorized lab use only. Print this page to produce a PDF.
+  </footer>
+</main>
+</body>
+</html>

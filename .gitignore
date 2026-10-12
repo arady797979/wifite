@@ -1,11 +1,38 @@
 *.swp
 *.pyc
+__pycache__/
+.pytest_cache/
+.venv/
 py/hs/
 hs/
 *.bak
 .idea/
 cracked.txt
+cracked.json
 MANIFEST
 dist/
 build/
 files.txt
+snakefw/wordlists/*.txt
+!snakefw/wordlists/README.md
+
+# Secrets
+.env
+*.env
+
+# Capture artifacts
+*.cap
+*.pcap
+*.hc22000
+*.kismet.csv
+*.kismet.netxml
+*.ivs
+
+# Runtime state
+snake/captures/
+snake/results/
+snake/logs/
+snakefw/captures/
+snakefw/results/
+snakefw/logs/
+*.log

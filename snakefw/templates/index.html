@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🐍 Snake — WiFi Pentest Framework</title>
+  <meta name="description" content="Snake: Advanced WiFi Penetration Testing Control Panel powered by wifite2, aircrack-ng, hashcat, and more."/>
+  <link rel="icon" href="{{ url_for('static', filename='img/snake_logo.jpg') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/snake.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/mitm.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/eviltwin.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/strike.css') }}"/>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════ SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <img src="{{ url_for('static', filename='img/snake_logo.jpg') }}" alt="Snake Logo" class="logo-img"/>
+    <div class="logo-text">
+      <span class="logo-title">SNAKE</span>
+      <span class="logo-sub">WiFi PenTest Framework</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav" role="tablist" aria-label="Snake sections">
+    <a class="nav-item active" data-tab="dashboard" href="#" role="tab" aria-selected="true" aria-controls="tab-dashboard">
+      <span class="nav-icon">⚡</span><span class="nav-label">Dashboard</span>
+    </a>
+    <a class="nav-item" data-tab="scanner" href="#" role="tab" aria-selected="false" aria-controls="tab-scanner">
+      <span class="nav-icon">📡</span><span class="nav-label">Scanner</span>
+      <span class="nav-badge" id="nav-badge-networks">0</span>
+    </a>
+    <a class="nav-item" data-tab="attacks" href="#" role="tab" aria-selected="false" aria-controls="tab-attacks">
+      <span class="nav-icon">⚔️</span><span class="nav-label">Attacks</span>
+      <span class="nav-badge" id="nav-badge-jobs">0</span>
+    </a>
+    <a class="nav-item" data-tab="cracked" href="#" role="tab" aria-selected="false" aria-controls="tab-cracked">
+      <span class="nav-icon">🏆</span><span class="nav-label">Cracked</span>
+      <span class="nav-badge success" id="nav-badge-cracked">0</span>
+    </a>
+    <a class="nav-item" data-tab="tools" href="#" role="tab" aria-selected="false" aria-controls="tab-tools">
+      <span class="nav-icon">🔧</span><span class="nav-label">Tools</span>
+    </a>
+    <a class="nav-item" data-tab="arsenal" href="#" role="tab" aria-selected="false" aria-controls="tab-arsenal">
+      <span class="nav-icon">🎭</span><span class="nav-label">Arsenal</span>
+    </a>
+    <a class="nav-item" data-tab="twin" href="#" id="nav-twin" role="tab" aria-selected="false" aria-controls="tab-twin">
+      <span class="nav-icon">👻</span><span class="nav-label">Twin</span>
+      <span class="nav-badge" id="nav-badge-twin" style="background:rgba(191,90,242,0.2);color:#bf5af2;border-color:rgba(191,90,242,0.3)">OFF</span>
+    </a>
+    <a class="nav-item" data-tab="mitm" href="#" id="nav-mitm" role="tab" aria-selected="false" aria-controls="tab-mitm">
+      <span class="nav-icon">🎯</span><span class="nav-label">MITM</span>
+      <span class="nav-badge" id="nav-badge-mitm" style="background:rgba(255,45,85,0.2);color:#ff2d55;border-color:rgba(255,45,85,0.3)">OFF</span>
+    </a>
+    <a class="nav-item" data-tab="strike" href="#" id="nav-strike" role="tab" aria-selected="false" aria-controls="tab-strike">
+      <span class="nav-icon">⚡</span><span class="nav-label">Strike</span>
+      <span class="nav-badge" id="nav-badge-strike" style="background:rgba(255,159,10,0.2);color:#ff9f0a;border-color:rgba(255,159,10,0.3)">LAN</span>
+    </a>
+    <a class="nav-item" data-tab="agent" href="#" role="tab" aria-selected="false" aria-controls="tab-agent">
+      <span class="nav-icon">🤖</span><span class="nav-label">AI Agent</span>
+    </a>
+    <a class="nav-item" data-tab="console" href="#" role="tab" aria-selected="false" aria-controls="tab-console">
+      <span class="nav-icon">💻</span><span class="nav-label">Console</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-status">
+    <div class="status-row">
+      <span class="status-dot" id="conn-dot"></span>
+      <span id="conn-label">Connecting...</span>
+    </div>
+    <div class="status-row">
+      <span class="label-muted">Interface:</span>
+      <span id="iface-label" class="mono accent">—</span>
+    </div>
+    <div class="status-row">
+      <span class="label-muted">Mode:</span>
+      <span id="mode-label" class="mono">—</span>
+    </div>
+    <div class="status-row">
+      <span class="label-muted">State:</span>
+      <span id="state-label" class="mono state-idle">IDLE</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════════ MAIN -->
+<main class="main" id="main">
+
+  <!-- Top Bar -->
+  <header class="topbar">
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle navigation">☰</button>
+    <div class="topbar-title">
+      <span class="glitch" data-text="SNAKE CONTROL PANEL">SNAKE CONTROL PANEL</span>
+    </div>
+    <div class="topbar-right">
+      <span class="uptime-label">UPTIME: <span id="uptime-val">00:00:00</span></span>
+      <div class="mode-switch-group">
+        <button class="btn btn-sm btn-ghost" id="btn-monitor" title="Enable Monitor Mode">📡 MONITOR</button>
+        <button class="btn btn-sm btn-ghost" id="btn-managed" title="Switch to Managed Mode">🌐 MANAGED</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─────────────────────── TAB: DASHBOARD -->
+  <section class="tab-content active" id="tab-dashboard">
+    <div class="panel health-panel">
+      <div class="panel-header">
+        <span class="panel-title">Guided Setup</span>
+        <button class="btn btn-sm btn-ghost" onclick="loadHealth()">Run preflight</button>
+      </div>
+      <div class="panel-body">
+        <div class="guided-steps">
+          <span>1. Preflight</span><span>2. Interface</span><span>3. Scan</span>
+          <span>4. Select target</span><span>5. Review and run</span>
+        </div>
+        <div id="health-summary" class="health-summary">Checking system readiness…</div>
+        <div class="radio-plan" id="radio-plan">
+          <div class="radio-plan-head">
+            <span class="panel-title" style="font-size:0.85rem">Radio plan</span>
+            <button class="btn btn-sm btn-ghost" onclick="openReport()">📄 Report</button>
+          </div>
+          <div id="radio-plan-chips" class="radio-chips">Detecting adapters…</div>
+        </div>
+      </div>
+    </div>
+    <!-- Stat cards row -->
+    <div class="stat-grid">
+      <div class="stat-card" data-color="green">
+        <div class="stat-icon">📡</div>
+        <div class="stat-body">
+          <div class="stat-value" id="stat-networks">0</div>
+          <div class="stat-label">Networks Detected</div>
+        </div>
+        <div class="stat-spark" id="spark-networks"></div>
+      </div>
+      <div class="stat-card" data-color="yellow">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-body">
+          <div class="stat-value" id="stat-easy">0</div>
+          <div class="stat-label">Easy Targets</div>
+        </div>
+      </div>
+      <div class="stat-card" data-color="red">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-body">
+          <div class="stat-value" id="stat-suspicious">0</div>
+          <div class="stat-label">Suspicious</div>
+        </div>
+      </div>
+      <div class="stat-card" data-color="cyan">
+        <div class="stat-icon">⚔️</div>
+        <div class="stat-body">
+          <div class="stat-value" id="stat-jobs">0</div>
+          <div class="stat-label">Active Jobs</div>
+        </div>
+      </div>
+      <div class="stat-card" data-color="gold">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-body">
+          <div class="stat-value" id="stat-cracked">0</div>
+          <div class="stat-label">Cracked</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interface selector -->
+    <div class="panel" id="panel-interface">
+      <div class="panel-header">
+        <span class="panel-title">🔌 Interface Control</span>
+        <button class="btn btn-sm btn-ghost" onclick="refreshInterfaces()">↻ Refresh</button>
+      </div>
+      <div class="panel-body">
+        <div class="iface-row">
+          <select id="iface-select" class="select-styled">
+            <option value="">── Select Interface ──</option>
+          </select>
+          <button class="btn btn-primary" id="btn-select-iface" onclick="selectInterface()">
+            Select
+          </button>
+          <button class="btn btn-warning" id="btn-monitor-panel" onclick="enableMonitor()">
+            📡 Monitor Mode
+          </button>
+          <button class="btn btn-ghost" id="btn-managed-panel" onclick="enableManaged()">
+            🌐 Managed Mode
+          </button>
+        </div>
+        <div class="iface-info" id="iface-info">No interface selected.</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">⚡ Quick Actions</span></div>
+      <div class="panel-body">
+        <div class="quick-actions">
+          <button class="quick-btn" onclick="quickScan()">
+            <span class="qa-icon">📡</span>
+            <span class="qa-label">Quick Scan</span>
+            <span class="qa-sub">30 second preset</span>
+          </button>
+          <button class="quick-btn" onclick="autoAttack()">
+            <span class="qa-icon">🤖</span>
+            <span class="qa-label">Auto Attack</span>
+            <span class="qa-sub">All easy targets</span>
+          </button>
+          <button class="quick-btn" onclick="launchWifite()">
+            <span class="qa-icon">🐍</span>
+            <span class="qa-label">Run Wifite2</span>
+            <span class="qa-sub">Full automation</span>
+          </button>
+          <button class="quick-btn" onclick="exportCracked()">
+            <span class="qa-icon">💾</span>
+            <span class="qa-label">Export Results</span>
+            <span class="qa-sub">Download cracked.json</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent cracks -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">🏆 Recent Cracks</span></div>
+      <div class="panel-body">
+        <div id="recent-cracked-list" class="cracked-mini-list">
+          <div class="empty-state">No cracks yet. Run an attack!</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────── TAB: SCANNER -->
+  <section class="tab-content" id="tab-scanner">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">📡 Network Scanner</span>
+        <div class="scan-controls">
+          <select id="scan-channel" class="select-styled" style="width:120px">
+            <option value="0">All Channels</option>
+            <option value="1">Ch 1</option><option value="2">Ch 2</option>
+            <option value="3">Ch 3</option><option value="4">Ch 4</option>
+            <option value="5">Ch 5</option><option value="6">Ch 6</option>
+            <option value="7">Ch 7</option><option value="8">Ch 8</option>
+            <option value="9">Ch 9</option><option value="10">Ch 10</option>
+            <option value="11">Ch 11</option><option value="36">Ch 36</option>
+            <option value="40">Ch 40</option><option value="44">Ch 44</option>
+          </select>
+          <select id="scan-band" class="select-styled" style="width:100px">
+            <option value="bg">2.4 GHz</option>
+            <option value="a">5 GHz</option>
+            <option value="abg">Both</option>
+          </select>
+          <select id="scan-duration" class="select-styled" aria-label="Scan duration">
+            <option value="0">Until stopped</option>
+            <option value="30">30 seconds</option>
+            <option value="60">60 seconds</option>
+            <option value="120">2 minutes</option>
+          </select>
+          <button class="btn btn-primary" id="btn-scan-start" onclick="startScan()">▶ Start Scan</button>
+          <button class="btn btn-danger" id="btn-scan-stop" onclick="stopScan()" disabled>■ Stop</button>
+        </div>
+      </div>
+      <div class="scan-status-bar" id="scan-status-bar">
+        <span class="pulse-dot" id="scan-pulse"></span>
+        <span id="scan-status-text">Ready to scan</span>
+        <span class="ms-auto" id="scan-count">0 networks</span>
+      </div>
+    </div>
+
+    <!-- Network table -->
+    <div class="panel no-pad">
+      <div class="networks-table-wrap">
+        <table class="networks-table" id="networks-table">
+          <thead>
+            <tr>
+              <th>Threat</th><th>ESSID</th><th>BSSID</th>
+              <th>Ch</th><th>Signal</th><th>Enc</th>
+              <th>WPS</th><th>Clients</th><th>Attack</th><th>Score</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="networks-tbody">
+            <tr><td colspan="11" class="empty-cell">Run a scan to discover networks</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────── TAB: ATTACKS -->
+  <section class="tab-content" id="tab-attacks">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">📡 RF Tools</span>
+        <span class="badge" id="rf-tool-label">mdk4 / mdk3</span>
+      </div>
+      <div class="panel-body">
+        <p class="form-hint" id="rf-target-hint">Uses the Scanner target. Prefer mdk4, then mdk3, then aireplay-ng for deauth.</p>
+        <div class="rf-panel-grid">
+          <div class="form-row">
+            <label for="rf-mode">Preset</label>
+            <select id="rf-mode" class="select-styled">
+              <option value="deauth">Deauth</option>
+              <option value="beacon">Beacon flood</option>
+              <option value="auth">Auth DoS</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="rf-duration">Duration (seconds, 0 = until stop)</label>
+            <input id="rf-duration" type="number" class="input-styled" min="0" max="600" value="30"/>
+          </div>
+          <div class="form-row">
+            <label for="rf-bssid">Target BSSID</label>
+            <input id="rf-bssid" type="text" class="input-styled" placeholder="Select from scan"/>
+          </div>
+          <div class="form-row">
+            <label for="rf-essid">ESSID</label>
+            <input id="rf-essid" type="text" class="input-styled" placeholder="Network name"/>
+          </div>
+          <div class="form-row">
+            <label for="rf-channel">Channel</label>
+            <input id="rf-channel" type="number" class="input-styled" min="1" max="196" value="6"/>
+          </div>
+          <div class="form-row">
+            <label for="rf-client">Client MAC (optional)</label>
+            <input id="rf-client" type="text" class="input-styled" placeholder="Leave blank for broadcast"/>
+          </div>
+          <div class="form-row">
+            <label class="toggle-label">
+              <input type="checkbox" id="rf-stealth"/>
+              <span>Stealth deauth (random pauses)</span>
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" id="rf-rotate-mac"/>
+              <span>Rotate source MAC each burst</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="launchRf()">📡 Launch RF</button>
+          <button class="btn btn-danger" onclick="stopRf()">■ Stop RF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manual attack form -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">⚔️ Launch Attack</span></div>
+      <div class="panel-body">
+        <div class="attack-form">
+          <p class="form-hint" id="attack-target-hint">Click a network in Scanner to auto-fill BSSID, ESSID, and channel. Handshake jobs try ESSID keys, then your tier, then the rest. If all miss, the hash is saved for Online crack.</p>
+          <div class="form-row">
+            <label for="atk-bssid">Target BSSID</label>
+            <input id="atk-bssid" type="text" class="input-styled" placeholder="Select from scan or AA:BB:CC:DD:EE:FF"/>
+          </div>
+          <div class="form-row">
+            <label for="atk-essid">ESSID (optional)</label>
+            <input id="atk-essid" type="text" class="input-styled" placeholder="Network Name"/>
+          </div>
+          <div class="form-row">
+            <label for="atk-channel">Channel</label>
+            <input id="atk-channel" type="number" class="input-styled" placeholder="6" min="1" max="165" value="6"/>
+          </div>
+          <div class="form-row">
+            <label for="atk-vector">Attack Vector</label>
+            <select id="atk-vector" class="select-styled">
+              <option value="WPA_HANDSHAKE">🤝 WPA Handshake Capture</option>
+              <option value="WPA_PMKID">🔑 PMKID Attack (hcxdumptool)</option>
+              <option value="WPS_PIXIE">✨ WPS Pixie-Dust</option>
+              <option value="WPS_BRUTEFORCE">🔨 WPS Brute-Force</option>
+              <option value="WEP">💥 WEP Crack (ARP Replay)</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="atk-wordlist">Wordlist (CPU)</label>
+            <select id="atk-wordlist" class="select-styled">
+              <option value="">Active (then escalate)</option>
+              <option value="fast">Fast — then Smart + Deep if this misses</option>
+              <option value="smart">Smart — then Deep if this misses</option>
+              <option value="deep">Deep — last local list, then online queue</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-ghost" onclick="previewAttack()">Review prerequisites</button>
+            <button class="btn btn-primary" onclick="launchAttack()">⚔️ Launch Attack</button>
+            <button class="btn btn-warning" onclick="autoAttack()">🤖 Auto Attack Selected Targets</button>
+            <button class="btn btn-snake" onclick="launchWifite()">🐍 Run Full Wifite2</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jobs list -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">📋 Attack Jobs</span>
+        <span id="jobs-count" class="badge">0 jobs</span>
+      </div>
+      <div class="panel-body">
+        <div id="jobs-list" class="jobs-list">
+          <div class="empty-state">No jobs yet.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────── TAB: CRACKED -->
+  <section class="tab-content" id="tab-cracked">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">🏆 Cracked Passwords</span>
+        <div>
+          <span id="cracked-count-label" class="badge success">0 found</span>
+          <button class="btn btn-sm btn-ghost ms-2" onclick="exportCracked()">💾 Export</button>
+          <button class="btn btn-sm btn-ghost ms-2" onclick="loadCracked()">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="panel-body no-pad">
+        <table class="networks-table" id="cracked-table">
+          <thead>
+            <tr>
+              <th>#</th><th>ESSID</th><th>BSSID</th>
+              <th>Key / Password</th><th>Type</th><th>Date</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="cracked-tbody">
+            <tr><td colspan="6" class="empty-cell">No cracked passwords yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">☁ Online queue</span>
+        <div>
+          <span id="online-count-label" class="badge">0 saved</span>
+          <button class="btn btn-sm btn-ghost ms-2" onclick="checkOnlineQueue()">↻ Check results</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <p class="form-hint">When Fast/Smart/Deep miss, Snake keeps the handshake here. Submit sends the hash to wpa-sec (leaves this machine). An API key is needed to pull recovered keys back. Strong PSKs can still miss.</p>
+        <div class="form-row">
+          <label for="online-api-key">wpa-sec API key (optional, for Check results)</label>
+          <input id="online-api-key" type="password" class="input-styled" placeholder="Paste key from wpa-sec.stanev.org"/>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-sm btn-ghost" onclick="saveOnlineKey()">Save key</button>
+          <a class="btn btn-sm btn-ghost" href="https://wpa-sec.stanev.org" target="_blank" rel="noopener">Open wpa-sec</a>
+        </div>
+        <div id="online-queue-list" class="online-queue-list">
+          <div class="empty-state">No saved hashes yet. Failed handshake jobs land here.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────── TAB: TOOLS -->
+  <section class="tab-content" id="tab-tools">
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">🔧 Tool Status</span></div>
+      <div class="panel-body">
+        <div id="tools-grid" class="tools-grid">Loading...</div>
+      </div>
+    </div>
+
+    <!-- MAC Changer -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">🎭 MAC Changer</span></div>
+      <div class="panel-body">
+        <div class="form-row">
+          <label for="mac-iface">Interface</label>
+          <input id="mac-iface" type="text" class="input-styled" placeholder="wlan0"/>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="changeMac('random')">🎲 Random MAC</button>
+          <button class="btn btn-ghost" onclick="changeMac('reset')">↩ Reset MAC</button>
+        </div>
+        <div id="mac-result" class="mono mt-2" style="color:var(--accent-green)"></div>
+      </div>
+    </div>
+
+    <!-- Wordlist info -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">📖 Wordlists</span>
+        <button class="btn btn-sm btn-ghost" onclick="rebuildWordlists()">Rebuild from SecLists</button>
+      </div>
+      <div class="panel-body">
+        <p class="form-hint">Three CPU tiers plus an ESSID-first pass. A miss escalates automatically. After Deep, the handshake is saved for the Online queue on the Cracked tab.</p>
+        <div id="wordlist-info" class="wordlist-grid">
+          Checking wordlists...
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────── TAB: ARSENAL (Social + extended tools) -->
+  <section class="tab-content" id="tab-arsenal">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">🎭 Attack Arsenal</span>
+        <button class="btn btn-sm btn-ghost" onclick="loadArsenal()">↻ Refresh</button>
+      </div>
+      <div class="panel-body">
+        <p class="form-hint">Authorized lab only. Built-in Twin + MITM profiles stay in their tabs; external SE tools launch via copy-paste commands filled from your scanner target.</p>
+        <div class="form-actions">
+          <button class="btn btn-sm btn-warning" onclick="runArsenalNcrack(true)">🔓 ncrack (Strike hosts)</button>
+          <button class="btn btn-sm btn-ghost" onclick="switchTab('twin')">👻 Twin portal</button>
+          <button class="btn btn-sm btn-ghost" onclick="switchTab('mitm')">🎯 MITM profiles</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">📦 One-line upgrades (apt)</span></div>
+      <div class="panel-body" id="arsenal-bundles">Loading bundles…</div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">🧪 Social &amp; WiFi playbooks</span></div>
+      <div class="panel-body arsenal-playbook-grid" id="arsenal-playbooks">Loading…</div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────── TAB: CONSOLE -->
+  <section class="tab-content" id="tab-console">
+    <div class="panel console-panel">
+      <div class="panel-header">
+        <span class="panel-title">💻 Live Console</span>
+        <div>
+          <button class="btn btn-sm btn-ghost" onclick="clearConsole()">🗑 Clear</button>
+          <button class="btn btn-sm btn-ghost" onclick="scrollConsole()">⬇ Bottom</button>
+          <label class="toggle-label">
+            <input type="checkbox" id="console-autoscroll" checked/>
+            <span>Auto-scroll</span>
+          </label>
+        </div>
+      </div>
+      <div class="console-body" id="console-body">
+        <div class="console-line info">
+          <span class="log-ts">--:--:--</span>
+          <span class="log-msg">🐍 Snake console ready. Waiting for events...</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────── TAB: AGENT -->
+  <section class="tab-content" id="tab-agent" style="padding:20px;gap:16px">
+    <div class="panel" style="flex:1;display:flex;flex-direction:column;height:70vh;">
+      <div class="panel-header">
+        <span class="panel-title">🤖 Snake AI Assistant</span>
+        <span id="agent-status-line" class="form-hint" style="margin:0 12px;flex:1"></span>
+        <button class="btn btn-sm btn-ghost" onclick="clearAgentChat()">🗑 Clear</button>
+      </div>
+      <div class="panel-body" style="flex:1;display:flex;flex-direction:column;padding:0;background:rgba(0,0,0,0.2);">
+        <div id="agent-chat-history" style="flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:10px;">
+          <div class="agent-msg sys-msg" style="align-self:flex-start;background:#2d2d2d;padding:10px;border-radius:8px;border-left:3px solid var(--accent-cyan);max-width:80%;">
+            I control Snake via 35+ tools (scan, attacks, Twin, RF, MITM, Strike, Pivot, Arsenal). Authorized lab only — tell me your goal or ask for a status check.
+          </div>
+        </div>
+        <div style="display:flex;padding:10px;border-top:1px solid #333;background:#1a1a1a;">
+          <input type="text" id="agent-input" class="input-styled" placeholder="Tell me what to do..." style="flex:1;border-radius:4px 0 0 4px;" onkeypress="if(event.key==='Enter') sendToAgent()">
+          <button class="btn btn-primary" onclick="sendToAgent()" style="border-radius:0 4px 4px 0;white-space:nowrap;">Send</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────── TAB: TWIN -->
+  <section class="tab-content" id="tab-twin" style="padding:20px;gap:16px">
+    <div class="mitm-banner" id="twin-banner">
+      <div class="mitm-banner-dot" id="twin-dot"></div>
+      <span id="twin-status-text" class="mono">Twin inactive — pick a target and launch</span>
+      <span class="ms-auto" id="twin-session-id" style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.72rem"></span>
+      <button class="btn btn-sm btn-danger" id="btn-twin-stop" onclick="stopTwin()" style="display:none">■ STOP TWIN</button>
+    </div>
+
+    <div class="twin-stats-row">
+      <div class="mitm-stat"><div class="mitm-stat-val" id="ts-clients">0</div><div class="mitm-stat-lbl">Clients</div></div>
+      <div class="mitm-stat cred-card"><div class="mitm-stat-val gold" id="ts-creds">0</div><div class="mitm-stat-lbl">Passwords</div></div>
+      <div class="mitm-stat"><div class="mitm-stat-val cyan" id="ts-hits">0</div><div class="mitm-stat-lbl">Portal Hits</div></div>
+      <div class="mitm-stat"><div class="mitm-stat-val purple" id="ts-deauth">OFF</div><div class="mitm-stat-lbl">Deauth</div></div>
+      <div class="mitm-stat"><div class="mitm-stat-val" id="ts-uptime">00:00</div><div class="mitm-stat-lbl">Uptime</div></div>
+    </div>
+
+    <div class="twin-grid">
+      <div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">👻 Twin Setup</span></div>
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
+            <div class="twin-steps">
+              <span class="twin-step active">1 Target</span>
+              <span class="twin-step">2 Radios</span>
+              <span class="twin-step">3 Launch</span>
+            </div>
+            <p class="form-hint">Click Twin on a Scanner row. Radios are auto-assigned.</p>
+            <div class="form-row">
+              <label for="twin-essid">ESSID</label>
+              <input id="twin-essid" class="input-styled" placeholder="From scanner"/>
+            </div>
+            <div class="form-row">
+              <label for="twin-bssid">BSSID</label>
+              <input id="twin-bssid" class="input-styled" placeholder="AA:BB:CC:DD:EE:FF"/>
+            </div>
+            <div class="form-row">
+              <label for="twin-channel">Channel <span id="twin-channel-hint" class="form-hint" style="display:inline;margin:0"></span></label>
+              <input id="twin-channel" type="number" class="input-styled" min="1" max="196" value="6"/>
+            </div>
+            <div class="form-row">
+              <label for="twin-ap-iface">AP interface (monitor becomes managed; NM stays off that radio)</label>
+              <select id="twin-ap-iface" class="select-styled"></select>
+            </div>
+            <div class="form-row">
+              <label for="twin-deauth-iface">Deauth interface (monitor)</label>
+              <select id="twin-deauth-iface" class="select-styled"></select>
+            </div>
+            <p class="twin-warning" id="twin-radio-warn" style="display:none"></p>
+            <div class="twin-chips" id="twin-chips"></div>
+            <label class="toggle-label">
+              <input type="checkbox" id="twin-stealth"/>
+              <span>Stealth deauth (random pauses + optional MAC rotate)</span>
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" id="twin-rotate-mac"/>
+              <span>Rotate deauth MAC each burst</span>
+            </label>
+            <div class="form-actions">
+              <button class="btn btn-sm btn-ghost" onclick="loadTwinStatus()">↻ Recheck</button>
+              <button class="btn btn-primary" id="btn-twin-start" onclick="startTwin()">👻 LAUNCH TWIN</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">📶 Connected Clients</span></div>
+          <div class="panel-body" style="padding:10px">
+            <div id="twin-clients"><div class="empty-state">Waiting for clients to join the twin…</div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">🔑 Captured Passwords</span>
+            <span id="twin-cred-count" class="badge">0 captured</span>
+          </div>
+          <div class="panel-body" style="padding:10px">
+            <div id="twin-creds"><div class="empty-state">No portal submissions yet</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────── TAB: MITM -->
+  <section class="tab-content" id="tab-mitm" style="padding:20px;gap:16px">
+
+    <!-- Status Banner -->
+    <div class="mitm-banner" id="mitm-banner">
+      <div class="mitm-banner-dot" id="mitm-dot"></div>
+      <span id="mitm-status-text" class="mono">MITM Inactive — Configure and launch below</span>
+      <span class="ms-auto" id="mitm-session-id" style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.72rem"></span>
+      <button class="btn btn-sm btn-danger" id="btn-mitm-stop" onclick="stopMITM()" style="display:none">■ STOP ALL</button>
+    </div>
+
+    <!-- Live Stats Row -->
+    <div class="mitm-stats-row">
+      <div class="mitm-stat"><div class="mitm-stat-val" id="ms-packets">0</div><div class="mitm-stat-lbl">Packets</div></div>
+      <div class="mitm-stat"><div class="mitm-stat-val cyan" id="ms-bytes">0</div><div class="mitm-stat-lbl">Bytes</div></div>
+      <div class="mitm-stat"><div class="mitm-stat-val" id="ms-http">0</div><div class="mitm-stat-lbl">HTTP Reqs</div></div>
+      <div class="mitm-stat"><div class="mitm-stat-val" id="ms-dns">0</div><div class="mitm-stat-lbl">DNS Queries</div></div>
+      <div class="mitm-stat cred-card"><div class="mitm-stat-val gold" id="ms-creds">0</div><div class="mitm-stat-lbl">⚡ Credentials</div></div>
+      <div class="mitm-stat"><div class="mitm-stat-val purple" id="ms-cookies">0</div><div class="mitm-stat-lbl">Cookies</div></div>
+    </div>
+
+    <!-- Main MITM Grid -->
+    <div class="mitm-grid" style="height:auto">
+
+      <!-- Left: Controls + Targets + Protocol chart -->
+      <div class="mitm-sidebar">
+
+        <!-- Controls -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">🎯 MITM Config</span></div>
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
+            <div class="form-row">
+              <label>Interface (managed / Ethernet)</label>
+              <input id="mitm-iface" class="input-styled" placeholder="eth0 or wlan0" type="text"/>
+            </div>
+            <p class="twin-warning" id="mitm-ready-warn" style="display:none"></p>
+            <div class="form-row">
+              <label>Gateway IP</label>
+              <input id="mitm-gateway" class="input-styled" placeholder="192.168.1.1" type="text"/>
+            </div>
+            <div class="form-row">
+              <label for="mitm-profile">bettercap profile</label>
+              <select id="mitm-profile" class="select-styled">
+                <option value="harvest">Harvest — ARP + HTTP proxy + PCAP</option>
+                <option value="hunt">Hunt — + DNS spoof + net probe</option>
+                <option value="hijack">Hijack — + SSL strip + hstshijack/jsinject</option>
+              </select>
+            </div>
+            <div class="mitm-toggle-group">
+              <label class="mitm-option">
+                <input type="checkbox" id="mitm-dns-spoof"/>
+                <span>DNS Spoof (override profile)</span>
+              </label>
+              <label class="mitm-option">
+                <input type="checkbox" id="mitm-sslstrip"/>
+                <span>SSL Strip (override profile)</span>
+              </label>
+              <label class="mitm-option">
+                <input type="checkbox" id="mitm-use-bc" checked/>
+                <span>bettercap</span>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-sm btn-ghost" onclick="discoverHosts()">🔍 Discover</button>
+              <button class="btn btn-primary" id="btn-mitm-start" onclick="startMITM()">🎯 LAUNCH MITM</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Target List -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">🖥️ Targets</span>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-ghost" onclick="selectAllTargets()">All</button>
+              <button class="btn btn-sm btn-ghost" onclick="clearTargets()">None</button>
+            </div>
+          </div>
+          <div class="panel-body" style="padding:8px">
+            <div id="target-list" class="target-list">
+              <div class="empty-state" style="padding:20px">Click Discover to find hosts</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Protocol Distribution -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">📊 Protocols</span></div>
+          <div class="panel-body">
+            <div id="proto-bars" class="proto-bars">
+              <div class="empty-state" style="padding:10px;text-align:left">Waiting for traffic...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Hosts -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">🌐 Top Hosts</span></div>
+          <div class="panel-body" style="padding:8px 12px">
+            <div id="top-hosts" class="top-hosts-list">
+              <div class="empty-state" style="padding:10px">No traffic yet</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">📈 Traffic Timeline</span></div>
+          <div class="panel-body" style="padding:8px 12px">
+            <div id="timeline-wrap" class="timeline-wrap">
+              <div style="color:var(--text-muted);font-size:0.72rem;width:100%;text-align:center">No data</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /mitm-sidebar -->
+
+      <!-- Right: Packet stream + Credentials -->
+      <div class="mitm-main">
+
+        <!-- Packet Stream -->
+        <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:350px">
+          <div class="panel-header">
+            <span class="panel-title">📡 Live Packet Stream</span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span id="stream-count" style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-muted)">0 packets</span>
+              <select id="pkt-filter" class="select-styled" style="width:110px" onchange="filterPackets()">
+                <option value="">All</option>
+                <option value="CRED">🏆 Creds</option>
+                <option value="HTTP">HTTP</option>
+                <option value="POST">POST</option>
+                <option value="DNS">DNS</option>
+                <option value="COOKIE">Cookies</option>
+                <option value="HANDSHAKE">TLS</option>
+              </select>
+              <label class="toggle-label">
+                <input type="checkbox" id="stream-autoscroll" checked/>
+                <span>Auto</span>
+              </label>
+              <button class="btn btn-sm btn-ghost" onclick="clearStream()">🗑 Clear</button>
+            </div>
+          </div>
+          <div class="packet-header">
+            <span>Time</span><span>Type</span><span>Source</span><span>Dest</span><span>Size</span><span>Info</span>
+          </div>
+          <div class="packet-stream" id="packet-stream">
+            <div style="padding:40px;text-align:center;color:var(--text-muted);font-family:var(--font-mono)">
+              🎯 Launch MITM to intercept traffic
+            </div>
+          </div>
+        </div>
+
+        <!-- Captured Credentials Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">💥 Captured Credentials</span>
+            <span id="cred-count-badge" class="badge">0 found</span>
+          </div>
+          <div class="panel-body" style="padding:10px;max-height:220px;overflow-y:auto">
+            <div id="cred-list" style="display:flex;flex-direction:column;gap:8px">
+              <div class="empty-state">No credentials captured yet</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /mitm-main -->
+    </div><!-- /mitm-grid -->
+  </section>
+
+  <!-- ─────────────────────── TAB: STRIKE (Nmap → NetExec → MSF) -->
+  <section class="tab-content" id="tab-strike" style="padding:20px;gap:16px">
+
+    <div class="strike-banner">
+      <div class="mitm-banner-dot" id="strike-dot"></div>
+      <span id="strike-status-text" class="mono">Ready — discover the LAN, then scan each device</span>
+      <span class="ms-auto strike-tool-chips" id="strike-tool-chips"></span>
+      <button class="btn btn-sm btn-ghost" onclick="openReport()">📄 Report</button>
+      <button class="btn btn-sm btn-danger" id="btn-strike-stop" onclick="stopStrikeChain()" style="display:none">■ STOP</button>
+    </div>
+
+    <div class="strike-pipeline" id="strike-pipeline">
+      <div class="strike-step" id="strike-step-discover"><div class="strike-step-label">1 Discover</div><div class="strike-step-name">All devices</div></div>
+      <div class="strike-step" id="strike-step-nmap"><div class="strike-step-label">2 Nmap</div><div class="strike-step-name">Per device</div></div>
+      <div class="strike-step" id="strike-step-netexec"><div class="strike-step-label">3 NetExec</div><div class="strike-step-name">Per device</div></div>
+      <div class="strike-step" id="strike-step-analyze"><div class="strike-step-label">4 Plan</div><div class="strike-step-name">Rank + map</div></div>
+      <div class="strike-step" id="strike-step-done"><div class="strike-step-label">5 Metasploit</div><div class="strike-step-name">Check / exploit</div></div>
+    </div>
+    <div class="strike-progress"><div class="strike-progress-bar" id="strike-progress-bar"></div></div>
+
+    <div id="strike-recommended" class="strike-recommended" style="display:none"></div>
+
+    <div class="mitm-stats-row">
+      <div class="mitm-stat"><div class="mitm-stat-val" id="strike-host-count">0</div><div class="mitm-stat-lbl">Live Hosts</div></div>
+      <div class="mitm-stat"><div class="mitm-stat-val gold" id="strike-findings-count">0</div><div class="mitm-stat-lbl">Key Findings</div></div>
+      <div class="mitm-stat"><div class="mitm-stat-val purple" id="strike-plan-count">0</div><div class="mitm-stat-lbl">MSF Checks</div></div>
+    </div>
+
+    <div class="strike-grid">
+      <div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">⚡ Strike</span></div>
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
+            <p class="form-hint">Discover every live host first. Then nmap / NetExec / Metasploit each device instead of spraying the whole subnet.</p>
+            <input type="hidden" id="strike-preset" value="smart"/>
+            <div class="strike-preset-row">
+              <button type="button" class="strike-preset-card" data-preset="quick" onclick="pickStrikePreset('quick')">
+                <strong>Quick</strong><span>Key ports</span>
+              </button>
+              <button type="button" class="strike-preset-card active" data-preset="smart" onclick="pickStrikePreset('smart')">
+                <strong>Smart</strong><span>Recommended</span>
+              </button>
+              <button type="button" class="strike-preset-card" data-preset="deep" onclick="pickStrikePreset('deep')">
+                <strong>Deep</strong><span>Top 1000</span>
+              </button>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" id="btn-strike-discover" onclick="discoverStrikeLan()">📡 Discover LAN</button>
+              <button class="btn btn-ghost" id="btn-strike-start" onclick="startStrikeChain()">⚡ Scan all</button>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-sm btn-ghost" id="btn-strike-scan-selected" onclick="scanSelectedStrikeHosts()">Nmap selected</button>
+              <button class="btn btn-sm btn-ghost" id="btn-strike-autocheck" onclick="autoCheckStrike()">🎯 Auto-check all</button>
+              <button class="btn btn-sm btn-warning" id="btn-strike-ncrack" onclick="runStrikeNcrack()">🔓 ncrack</button>
+            </div>
+            <button class="btn btn-sm btn-ghost" type="button" onclick="toggleStrikeAdvanced()">Advanced (iface / subnet)</button>
+            <div id="strike-advanced" style="display:none;flex-direction:column;gap:10px">
+              <div class="form-row">
+                <label for="strike-iface">Interface</label>
+                <select id="strike-iface" class="select-styled"></select>
+              </div>
+              <div class="form-row">
+                <label for="strike-gateway">Gateway</label>
+                <input id="strike-gateway" class="input-styled" placeholder="192.168.1.1"/>
+              </div>
+              <div class="form-row">
+                <label for="strike-subnet">Subnet</label>
+                <input id="strike-subnet" class="input-styled" placeholder="192.168.1.0/24"/>
+              </div>
+              <button class="btn btn-sm btn-ghost" onclick="loadStrikeStatus()">↻ Detect LAN</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">🎯 Check queue</span></div>
+          <div class="panel-body" id="strike-msf-queue" style="max-height:280px;overflow-y:auto">
+            <div class="empty-state">Queue fills after Analyze</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel strike-detail">
+        <div class="panel-header"><span class="panel-title">🖥 Host</span></div>
+        <div class="panel-body" id="strike-host-detail">
+          <div class="empty-state">Select a host — we highlight the next check</div>
+        </div>
+        <div class="panel-header"><span class="panel-title">📜 Metasploit output</span></div>
+        <div class="panel-body">
+          <pre id="strike-msf-output" class="mono" style="max-height:160px;overflow:auto;font-size:0.72rem;color:var(--text-muted)">—</pre>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">📋 Hosts</span>
+            <div class="strike-filters">
+              <button class="strike-filter active" data-filter="all" onclick="setStrikeFilter('all')">All</button>
+              <button class="strike-filter" data-filter="high" onclick="setStrikeFilter('high')">High</button>
+              <button class="strike-filter" data-filter="windows" onclick="setStrikeFilter('windows')">Win</button>
+              <button class="strike-filter" data-filter="linux" onclick="setStrikeFilter('linux')">Linux</button>
+            </div>
+          </div>
+          <div class="panel-body strike-host-list" id="strike-host-list">
+            <div class="empty-state">Discover LAN to list every connected device</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">🚨 Key vulns</span></div>
+          <div class="panel-body" id="strike-findings-list" style="max-height:240px;overflow-y:auto">
+            <div class="empty-state">Click a finding to open that host</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════ TOAST CONTAINER -->
+<div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ ATTACK MODAL -->
+<div class="modal-overlay" id="modal-attack" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modal-attack-title">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-attack-title">⚔️ Attack: Network</span>
+      <button class="modal-close" onclick="closeModal('modal-attack')" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="modal-body" id="modal-attack-body">
+      <div class="target-summary" id="modal-target-summary">
+        <div><span class="label-muted">ESSID</span> <strong id="modal-target-essid">—</strong></div>
+        <div><span class="label-muted">BSSID</span> <span id="modal-target-bssid" class="mono accent">—</span></div>
+        <div><span class="label-muted">Channel</span> <span id="modal-target-channel" class="mono">—</span></div>
+      </div>
+      <div class="form-row">
+        <label for="modal-atk-vector">Attack Vector</label>
+        <select id="modal-atk-vector" class="select-styled">
+          <option value="WPA_HANDSHAKE">🤝 WPA Handshake + Aircrack-ng</option>
+          <option value="WPA_PMKID">🔑 PMKID (hcxdumptool + hashcat)</option>
+          <option value="WPS_PIXIE">✨ WPS Pixie-Dust (reaver → bully)</option>
+          <option value="WPS_BRUTEFORCE">🔨 WPS Brute-Force (reaver → bully)</option>
+          <option value="WEP">💥 WEP Crack</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="closeModal('modal-attack')">Cancel</button>
+      <button class="btn btn-primary" id="modal-attack-btn" onclick="confirmAttack()">⚔️ Attack!</button>
+    </div>
+  </div>
+</div>
+
+<!-- SocketIO + JS -->
+<script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/snake.js') }}"></script>
+<script src="{{ url_for('static', filename='js/mitm.js') }}"></script>
+<script src="{{ url_for('static', filename='js/eviltwin.js') }}"></script>
+<script src="{{ url_for('static', filename='js/strike.js') }}"></script>
+<script src="{{ url_for('static', filename='js/arsenal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/agent.js') }}"></script>
+</body>
+</html>
